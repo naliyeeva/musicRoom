@@ -1,5 +1,6 @@
 import { Song } from "@/types";
 import { SongCard } from "../SongCard";
+import { Button } from "../ui/button";
 
 interface QueueProps {
   queue: Song[];
@@ -10,18 +11,35 @@ export function Queue({ queue, setIsAddSongOpen }: QueueProps) {
   return (
     <div className="space-y-3">
       {queue.length === 0 ? (
-        <div className="rounded border p-6 text-center text-gray-500">
-          No songs in queue yet.
-          <button
-            onClick={() => setIsAddSongOpen(true)}
-            className="mt-4 w-full rounded bg-black px-4 py-2 text-white"
-          >
-            + Add Song
-          </button>
+        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-6 text-center text-white/60 shadow-sm">
+          <div
+            className="pointer-events-none absolute inset-0 opacity-70"
+            style={{
+              background: `
+                radial-gradient(ellipse at top, rgba(168, 85, 247, 0.16), transparent 55%),
+                radial-gradient(ellipse at bottom, rgba(236, 72, 153, 0.10), transparent 60%)
+              `,
+            }}
+          />
+          <div className="relative">
+            <p className="text-sm">No songs in queue yet.</p>
+            <Button
+              onClick={() => setIsAddSongOpen(true)}
+              className="mt-4 h-11 w-full bg-[#af69ef] text-white shadow-[0_18px_40px_-18px_rgba(175,105,239,0.75)] hover:bg-[#af69ef]/85"
+            >
+              + Add Song
+            </Button>
+          </div>
         </div>
       ) : (
         queue.map((song) => <SongCard key={song.id} {...song} />)
       )}
+      <Button
+        onClick={() => setIsAddSongOpen(true)}
+        className="mt-4 h-11 w-full bg-[#af69ef] text-white shadow-[0_18px_40px_-18px_rgba(175,105,239,0.75)] hover:bg-[#af69ef]/85"
+      >
+        + Add Song
+      </Button>
     </div>
   );
 }
