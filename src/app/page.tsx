@@ -1,9 +1,8 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/general/Modal";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/lib/supabase/server";
 import { useRouter } from "next/navigation";
 import { createRoom } from "@/app/actions/create-room";
 
@@ -12,15 +11,6 @@ export default function Home() {
   const [roomName, setRoomName] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-
-  // const getRooms = async () => {
-  //   const { data } = await supabase.from("rooms").select("*");
-  //   console.log(data);
-  // };
-
-  // useEffect(() => {
-  //   getRooms();
-  // }, []);
 
   const handleCreateRoom = async () => {
     try {
@@ -35,18 +25,11 @@ export default function Home() {
     }
   };
 
-  // const createRoom = () => {
-  //   console.log("Creating room", roomName);
-  //   setIsOpen(false);
-  //   setRoomName("");
-  // };
-
   return (
-    <main>
-      <h1 className="text-4xl font-bold">Music Rooms</h1>
+    <main className="px-6 py-8 mx-auto w-screen h-screen max-w-2xl flex flex-col items-center justify-center">
+      <h1 className="text-4xl font-bold text-accent">Music Rooms</h1>
       <Button
-        variant="secondary"
-        className="mt-4"
+        className="mt-4 bg-[#af69ef] hover:bg-[#af69ef]/80 border-none h-auto w-full"
         onClick={() => setIsOpen(true)}
       >
         Create a room
