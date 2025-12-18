@@ -1,6 +1,8 @@
 import { Song } from "@/types";
 import { SongCard } from "../SongCard";
 import { Button } from "../ui/button";
+import { voteSong } from "@/app/actions/vote-song";
+import { useRouter } from "next/navigation";
 
 interface QueueProps {
   queue: Song[];
@@ -8,6 +10,26 @@ interface QueueProps {
 }
 
 export function Queue({ queue, setIsAddSongOpen }: QueueProps) {
+  const router = useRouter();
+
+  function getVote(songId: string): "up" | "down" | null {
+    const v = sessionStorage.getItem(`vote:${songId}`);
+    return v === "up" || v === "down" ? v : null;
+  }
+
+  function setVote(songId: string, v: "up" | "down") {
+    sessionStorage.setItem(`vote:${songId}`, v);
+  }
+
+  async function handleVote(songId: string, type: "up" | "down") {
+    const prev = getVote(songId);
+    if (prev === type) return; // already voted this way
+
+    await voteSong(songId, type);
+    setVote(songId, type);
+    router.refresh();
+  }
+
   return (
     <div className="space-y-3">
       {queue.length === 0 ? (
@@ -32,7 +54,9 @@ export function Queue({ queue, setIsAddSongOpen }: QueueProps) {
           </div>
         </div>
       ) : (
-        queue.map((song) => <SongCard key={song.id} {...song} />)
+        queue.map((song) => (
+          <SongCard key={song.id} {...song} onVote={handleVote} />
+        ))
       )}
       <Button
         onClick={() => setIsAddSongOpen(true)}
