@@ -27,7 +27,7 @@ export function Queue({ queue, setIsAddSongOpen }: QueueProps) {
 
     await voteSong(songId, type);
     setVote(songId, type);
-    router.refresh();
+    // router.refresh();
   }
 
   return (

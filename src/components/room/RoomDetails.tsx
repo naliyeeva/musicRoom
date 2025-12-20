@@ -2,6 +2,7 @@
 import { AddSongModal } from "../AddSongModal";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/client";
 import { Song } from "@/types";
 import { Queue } from "./Queue";
 
@@ -20,21 +21,73 @@ export function RoomDetails({ roomId, songs }: RoomDetailsProps) {
   const [loading, setLoading] = useState(true);
   const [isAddSongOpen, setIsAddSongOpen] = useState(false);
 
-  const sortedQueue: Song[] = songs.sort((a, b) => b.votes - a.votes);
+  // const sortedQueue: Song[] = songs.sort((a, b) => b.votes - a.votes);
+  function reorder(songs: Song[]) {
+    return [...songs].sort((a, b) => {
+      if (b.votes !== a.votes) return b.votes - a.votes;
+      return (
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      );
+    });
+  }
+
+  const [queue, setQueue] = useState<Song[]>(() => reorder(songs));
 
   useEffect(() => {
     async function fetchRoom() {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("rooms")
         .select("*")
         .eq("id", roomId)
         .single();
 
-      setRoom(data);
+      if (error) {
+        console.error(error);
+      }
+
+      setRoom(data ?? null);
       setLoading(false);
     }
 
     fetchRoom();
+  }, [roomId]);
+
+  useEffect(() => {
+    const supabase = createClient();
+
+    const channel = supabase
+      .channel(`room-${roomId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "songs",
+          filter: `room_id=eq.${roomId}`,
+        },
+        (payload) => {
+          setQueue((current) => {
+            if (payload.eventType === "INSERT") {
+              return reorder([...current, payload.new as Song]);
+            }
+
+            if (payload.eventType === "UPDATE") {
+              return reorder(
+                current.map((song) =>
+                  song.id === payload.new.id ? (payload.new as Song) : song
+                )
+              );
+            }
+
+            return current;
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [roomId]);
 
   if (loading) {
@@ -68,7 +121,7 @@ export function RoomDetails({ roomId, songs }: RoomDetailsProps) {
             <h2 className="text-lg font-semibold text-white">Queue</h2>
             <p className="text-xs text-white/50">Vote songs to move them up</p>
           </div>
-          <Queue queue={sortedQueue} setIsAddSongOpen={setIsAddSongOpen} />
+          <Queue queue={queue} setIsAddSongOpen={setIsAddSongOpen} />
         </section>
         <AddSongModal
           roomId={roomId}

@@ -7,4 +7,5 @@ export interface Song {
   title: string;
   artist: string;
   votes: number;
+  created_at: string;
 }
