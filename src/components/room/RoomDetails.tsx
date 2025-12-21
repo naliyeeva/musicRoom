@@ -56,9 +56,11 @@ export function RoomDetails({ roomId, songs }: RoomDetailsProps) {
     const supabase = createClient();
 
     const channel = supabase
+      // Channel name is arbitrary, but using room-${roomId} is a best practice
       .channel(`room-${roomId}`)
       .on(
         "postgres_changes",
+        // Notify me when songs in this room change
         {
           event: "*",
           schema: "public",
@@ -83,8 +85,12 @@ export function RoomDetails({ roomId, songs }: RoomDetailsProps) {
           });
         }
       )
+      // Opens the WebSocket connection
+      // Starts listening to changes
       .subscribe();
 
+    // Removes the WebSocket subscription
+    // Prevents memory leaks, duplicate events, and "ghost listeners" when switching rooms
     return () => {
       supabase.removeChannel(channel);
     };
